@@ -30,7 +30,9 @@ namespace Gum
         [SerializeField]
         float jumpHeight = 3f;
 
-        float yVelocity = 0f;
+        float yVelocity;
+
+        Vector2 touchBeginPosition;
 
         // Start is called before the first frame update
         void Awake()
@@ -41,10 +43,29 @@ namespace Gum
         // Update is called once per frame
         void Update()
         {
-            HandleGravityAndJump();
-
             var horizontal = Input.GetAxisRaw("Horizontal");
             var vertical = Input.GetAxisRaw("Vertical");
+
+            HandleGravityAndJump();
+
+            if (Input.touchCount > 0)
+            {
+                var touch = Input.GetTouch(0);
+
+                // Move the cube if the screen has the finger moving.
+                if (touch.phase == TouchPhase.Began)
+                {
+                    touchBeginPosition = touch.position;
+                }
+
+                if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
+                {
+                    var touchMovement = touch.position - touchBeginPosition;
+
+                    horizontal = touchMovement.x;
+                    vertical = touchMovement.y;
+                }
+            }
 
             if (horizontal == 0 && vertical == 0)
             {
