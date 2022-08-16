@@ -40,6 +40,11 @@ namespace Gum
         [SerializeField]
         float jumpHeight = 3f;
 
+        [SerializeField]
+        float _coyoteTime = 0.1f;
+
+        float _lastGroundedTime;
+
         float _yVelocity;
 
         bool _jumpPrepared;
@@ -68,8 +73,6 @@ namespace Gum
             {
                 // Прыжок тапом по плавой части экрана
                 _jumpPrepared = touch.isTap && touch.position.x > Screen.width / 2;
-                Debug.Log (_jumpPrepared);
-                Debug.Log(touch.phase);
             }
 
             if (touch.phase == TouchPhase.Began)
@@ -136,16 +139,25 @@ namespace Gum
 
         Vector3 HandleGravityAndJump()
         {
+            if (controller.isGrounded && _yVelocity < 0f)
+            {
+                // Видимо, чтобы сильно не росла скорость когда мы на месте стоим
+                _yVelocity = -0.5f;
+            }
+
             if (controller.isGrounded)
             {
-                if (_jumpPrepared)
-                {
-                    _yVelocity = Mathf.Sqrt(jumpHeight * 2f * -Physics.gravity.y);
-                }
-                else
-                {
-                    _yVelocity = 0;
-                }
+                _lastGroundedTime = Time.time;
+            }
+
+            var canJump = controller.isGrounded || Time.time - _lastGroundedTime < _coyoteTime;
+
+            if (_jumpPrepared && canJump)
+            {
+                _yVelocity = Mathf.Sqrt(jumpHeight * 2f * -Physics.gravity.y);
+
+                // Чтобы избежать двойного прыжка в интервал _coyoteTime
+                _lastGroundedTime = 0;
             }
 
             _yVelocity += Physics.gravity.y * gravityMultiplier * Time.deltaTime;
