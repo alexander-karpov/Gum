@@ -33,6 +33,8 @@ namespace Gum
 
         Vector2 _movementTouchCurrentPoint;
 
+        Vector3 _normal;
+
         [Header("Jump and gravity")]
         [SerializeField]
         float gravityMultiplier = 2;
@@ -106,6 +108,11 @@ namespace Gum
             }
         }
 
+        void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            _normal = hit.normal;
+        }
+
         // Update is called once per frame
         void Update()
         {
@@ -133,7 +140,10 @@ namespace Gum
 
             var direction = Quaternion.Euler(0, directionAngle, 0) * Vector3.forward;
 
-            transform.rotation = Quaternion.Euler(0, currentAngle, 0);
+            // Магия
+            var proj = direction - Vector3.Dot(direction, _normal) * _normal;
+            transform.rotation = Quaternion.LookRotation(proj, _normal);
+
             controller.Move(speed * Time.deltaTime * direction + jumpReplacement);
         }
 
@@ -141,8 +151,8 @@ namespace Gum
         {
             if (controller.isGrounded && _yVelocity < 0f)
             {
-                // Видимо, чтобы сильно не росла скорость когда мы на месте стоим
-                _yVelocity = -0.5f;
+                // Иначе будет прыгать как по лесенке при спуске по наклонной
+                _yVelocity = -2f;
             }
 
             if (controller.isGrounded)
