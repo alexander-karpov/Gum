@@ -6,27 +6,38 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 namespace Gum
 {
-    public class SkyLikeCinemachineInputProvider : Cinemachine.CinemachineInputProvider
+    public class
+    SkyLikeCinemachineInputProvider
+    : MonoBehaviour, Cinemachine.AxisState.IInputAxisProvider
     {
+        [Tooltip("Touch action")]
+        [SerializeField]
+        InputActionReference TouchAction;
+
         Vector2 _delta;
 
         int _touchId = -1;
 
-        void Awake()
+        void OnEnable()
         {
-            XYAxis.action.performed += XYAxisPerformed;
+            TouchAction.action.performed += TouchActionPerformed;
         }
 
-        private void XYAxisPerformed(InputAction.CallbackContext obj)
+        void OnDisable()
+        {
+            TouchAction.action.performed -= TouchActionPerformed;
+        }
+
+        private void TouchActionPerformed(InputAction.CallbackContext obj)
         {
             var touch = obj.ReadValue<TouchState>();
 
             if (touch.phase == TouchPhase.Began)
             {
                 var value = touch.position;
-                var isSuitableTouch = value.x > Screen.width / 2;
+                var isLookTouch = value.x > Screen.width / 2;
 
-                if (isSuitableTouch)
+                if (isLookTouch)
                 {
                     _touchId = touch.touchId;
                     _delta = Vector2.zero;
@@ -51,7 +62,7 @@ namespace Gum
             }
         }
 
-        public override float GetAxisValue(int axis)
+        public virtual float GetAxisValue(int axis)
         {
             if (!enabled || _delta == Vector2.zero)
             {
@@ -70,11 +81,6 @@ namespace Gum
             }
 
             return 0;
-        }
-
-        protected override void OnDisable()
-        {
-            XYAxis.action.performed -= XYAxisPerformed;
         }
     }
 }
