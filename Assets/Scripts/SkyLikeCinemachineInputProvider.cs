@@ -16,10 +16,13 @@ namespace Gum
 
         Vector2 _delta;
 
+        Vector2 _previousPosition;
+
         int _touchId = -1;
 
         void OnEnable()
         {
+            TouchAction.action.Enable();
             TouchAction.action.performed += TouchActionPerformed;
         }
 
@@ -41,6 +44,7 @@ namespace Gum
                 {
                     _touchId = touch.touchId;
                     _delta = Vector2.zero;
+                    _previousPosition = touch.position;
                 }
             }
 
@@ -48,7 +52,8 @@ namespace Gum
             {
                 if (touch.touchId == _touchId)
                 {
-                    _delta += touch.delta;
+                    _delta += touch.position - _previousPosition;
+                    _previousPosition = touch.position;
                 }
             }
 
@@ -58,6 +63,7 @@ namespace Gum
                 {
                     _touchId = -1;
                     _delta = Vector2.zero;
+                    _previousPosition = touch.position;
                 }
             }
         }
