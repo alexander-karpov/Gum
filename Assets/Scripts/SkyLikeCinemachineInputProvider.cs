@@ -2,12 +2,15 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+
 namespace Gum
 {
     public class SkyLikeCinemachineInputProvider : Cinemachine.CinemachineInputProvider
     {
-        Vector2 _previousValue;
-        bool _isSuitableEvents;
+        Vector2 _delta;
+
+        int _touchId = -1;
 
         void Awake()
         {
@@ -18,43 +21,55 @@ namespace Gum
         {
             var touch = obj.ReadValue<TouchState>();
 
-            switch(touch.phase)
+            if (touch.phase == TouchPhase.Began)
             {
-                case UnityEngine.InputSystem.TouchPhase.Began:
-                    var value = touch.position;
-                    _isSuitableEvents = value.x > Screen.width / 2;
-                    _previousValue = value;
-                    return;
+                var value = touch.position;
+                var isSuitableTouch = value.x > Screen.width / 2;
+
+                if (isSuitableTouch)
+                {
+                    _touchId = touch.touchId;
+                    _delta = Vector2.zero;
+                }
+            }
+
+            if (touch.phase == TouchPhase.Moved)
+            {
+                if (touch.touchId == _touchId)
+                {
+                    _delta += touch.delta;
+                }
+            }
+
+            if (touch.phase == TouchPhase.Ended)
+            {
+                if (touch.touchId == _touchId)
+                {
+                    _touchId = -1;
+                    _delta = Vector2.zero;
+                }
             }
         }
 
         public override float GetAxisValue(int axis)
         {
-            if (!enabled)
+            if (!enabled || _delta == Vector2.zero)
             {
                 return 0;
             }
 
-            var action = ResolveForPlayer(axis, axis == 2 ? ZAxis : XYAxis);
+            var isHorizontalSwipe = Mathf.Abs(_delta.x) >= Mathf.Abs(_delta.y);
+            var sign = Mathf.Sign(isHorizontalSwipe ? _delta.x : _delta.y);
 
-            if (action == null || !action.inProgress || !_isSuitableEvents)
+            if (axis == 0 && isHorizontalSwipe || axis == 1 && !isHorizontalSwipe)
             {
-                return 0;
+                var value = _delta.magnitude * sign;
+                _delta = Vector2.zero;
+
+                return value;
             }
 
-            var touch = action.ReadValue<TouchState>();
-            var value = touch.position;
-            var delta = value - _previousValue;
-            var isHorizontalSwipe = Mathf.Abs(delta.x) >= Mathf.Abs(delta.y);
-
-            _previousValue = value;
-
-            return axis switch
-            {
-                0 => isHorizontalSwipe ? delta.x : 0,
-                1 => !isHorizontalSwipe ? delta.y : 0,
-                _ => 0
-            };
+            return 0;
         }
 
         protected override void OnDisable()
