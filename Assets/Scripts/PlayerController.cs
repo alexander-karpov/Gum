@@ -1,23 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Gum
 {
-    public class Movement : MonoBehaviour
+    public class PlayerController : MonoBehaviour
     {
         CharacterController controller;
 
-        const float speed = 5f;
+        PlayerInput playerInput;
+
+        [Header("Movement")]
+        [SerializeField]
+        float speed = 5f;
 
         [SerializeField]
         float rotationSmoothTime = .1f;
 
         float currentAngle;
 
-        float rotationVelocity = 1f;
+        float rotationVelocity;
 
-        [Header("Gravity")]
+        [Header("Jump and gravity")]
         [SerializeField]
         float gravity = 9.8f;
 
@@ -25,54 +30,35 @@ namespace Gum
         float gravityMultiplier = 2;
 
         [SerializeField]
-        float groundedGravity = -0.5f;
+        float groundedVelocity = -0.5f;
 
         [SerializeField]
         float jumpHeight = 3f;
 
         float yVelocity;
 
-        Vector2 touchBeginPosition;
+        bool jumpPrepared;
 
         // Start is called before the first frame update
-        void Awake()
+        void Start()
         {
             controller = GetComponent<CharacterController>();
+            playerInput = GetComponent<PlayerInput>();
         }
 
         // Update is called once per frame
         void Update()
         {
-            var horizontal = Input.GetAxisRaw("Horizontal");
-            var vertical = Input.GetAxisRaw("Vertical");
-
             HandleGravityAndJump();
 
-            if (Input.touchCount > 0)
-            {
-                var touch = Input.GetTouch(0);
+            var move = playerInput.actions["Move"].ReadValue<Vector2>();
 
-                // Move the cube if the screen has the finger moving.
-                if (touch.phase == TouchPhase.Began)
-                {
-                    touchBeginPosition = touch.position;
-                }
-
-                if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
-                {
-                    var touchMovement = touch.position - touchBeginPosition;
-
-                    horizontal = touchMovement.x;
-                    vertical = touchMovement.y;
-                }
-            }
-
-            if (horizontal == 0 && vertical == 0)
+            if (move == Vector2.zero)
             {
                 return;
             }
 
-            Vector3 input = new Vector3(horizontal, 0, vertical).normalized;
+            Vector3 input = new Vector3(move.x, 0, move.y);
 
             float directionAngle =
                 Mathf.Atan2(input.x, input.z) * Mathf.Rad2Deg + Camera.main.transform.eulerAngles.y;
@@ -92,14 +78,35 @@ namespace Gum
 
         void HandleGravityAndJump()
         {
+            var jump = playerInput.actions["Jump"];
+            var look = playerInput.actions["Look"];
+
             if (controller.isGrounded && yVelocity < 0f)
             {
-                yVelocity = groundedGravity;
+                yVelocity = groundedVelocity;
             }
 
-            if (controller.isGrounded && Input.GetAxisRaw("Jump") > 0)
+            if (!jumpPrepared && jump.WasPressedThisFrame())
+            {
+                jumpPrepared = true;
+            }
+
+            if (look.triggered)
+            {
+                jumpPrepared = false;
+            }
+
+            if (
+                controller.isGrounded &&
+                jumpPrepared &&
+                playerInput.actions["Jump"].WasReleasedThisFrame()
+            )
             {
                 yVelocity = Mathf.Sqrt(jumpHeight * 2f * gravity);
+                jumpPrepared = false;
+
+                InputSystem.QueueDeltaStateEvent(Gamepad.current.rightStick, new Vector2(0.5f, 0f));
+                Debug.Log("QueueDeltaStateEvent");
             }
 
             yVelocity -= gravity * gravityMultiplier * Time.deltaTime;
