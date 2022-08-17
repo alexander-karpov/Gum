@@ -33,7 +33,9 @@ namespace Gum
 
         Vector2 _movementTouchCurrentPoint;
 
-        Vector3 _normal;
+        Vector3 _normal = Vector3.up;
+
+        Vector3 _direction = Vector3.forward;
 
         [Header("Jump and gravity")]
         [SerializeField]
@@ -116,6 +118,11 @@ namespace Gum
         // Update is called once per frame
         void Update()
         {
+            if (transform.position.y < 10f)
+            {
+                transform.position = Vector3.zero;
+            }
+
             var jumpReplacement = HandleGravityAndJump();
 
             var move = _movementTouchCurrentPoint - _movementTouchStartPoint;
@@ -123,6 +130,9 @@ namespace Gum
             if (move == Vector2.zero)
             {
                 controller.Move (jumpReplacement);
+                var proj2 = _direction - Vector3.Dot(_direction, _normal) * _normal;
+                transform.rotation = Quaternion.LookRotation(proj2, _normal);
+
                 return;
             }
 
@@ -138,13 +148,13 @@ namespace Gum
                     ref rotationVelocity,
                     rotationSmoothTime);
 
-            var direction = Quaternion.Euler(0, directionAngle, 0) * Vector3.forward;
+            _direction = Quaternion.Euler(0, directionAngle, 0) * Vector3.forward;
 
             // Магия
-            var proj = direction - Vector3.Dot(direction, _normal) * _normal;
+            var proj = _direction - Vector3.Dot(_direction, _normal) * _normal;
             transform.rotation = Quaternion.LookRotation(proj, _normal);
 
-            controller.Move(speed * Time.deltaTime * direction + jumpReplacement);
+            controller.Move(speed * Time.deltaTime * _direction + jumpReplacement);
         }
 
         Vector3 HandleGravityAndJump()

@@ -6,45 +6,16 @@
             "id": "ff853f96-0077-4254-ad8c-8a20c1f56cf8",
             "actions": [
                 {
-                    "name": "Move",
-                    "type": "Value",
-                    "id": "e0dcf5af-7234-4c48-a6a8-b3e34b5683ac",
-                    "expectedControlType": "Vector2",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "Look",
+                    "name": "MoveAndLook",
                     "type": "PassThrough",
                     "id": "09048887-4645-4e3f-88c8-210f3881b687",
                     "expectedControlType": "Touch",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
-                },
-                {
-                    "name": "Jump",
-                    "type": "Button",
-                    "id": "6ca06600-7c27-481f-b89a-defdcdd121da",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 }
             ],
             "bindings": [
-                {
-                    "name": "",
-                    "id": "41a75a9b-52c7-477b-81f9-89d42ac036f8",
-                    "path": "<Gamepad>/leftStick",
-                    "interactions": "",
-                    "processors": "NormalizeVector2",
-                    "groups": "",
-                    "action": "Move",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
                 {
                     "name": "",
                     "id": "a11ce23c-af93-47e8-ab4e-0b21f908712a",
@@ -52,7 +23,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Look",
+                    "action": "MoveAndLook",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -63,18 +34,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Look",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "fe7fd55b-b030-4028-a89d-2317790c2849",
-                    "path": "<Gamepad>/buttonSouth",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Jump",
+                    "action": "MoveAndLook",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
