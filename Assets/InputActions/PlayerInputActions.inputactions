@@ -6,7 +6,7 @@
             "id": "ff853f96-0077-4254-ad8c-8a20c1f56cf8",
             "actions": [
                 {
-                    "name": "MoveAndLook",
+                    "name": "Touch",
                     "type": "PassThrough",
                     "id": "09048887-4645-4e3f-88c8-210f3881b687",
                     "expectedControlType": "Touch",
@@ -23,7 +23,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "MoveAndLook",
+                    "action": "Touch",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -34,7 +34,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "MoveAndLook",
+                    "action": "Touch",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

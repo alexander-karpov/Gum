@@ -1,20 +1,11 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
-
-using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 namespace Gum
 {
     public class PlayerController : MonoBehaviour
     {
         CharacterController controller;
-
-        [SerializeField]
-        InputActionReference TouchAction;
 
         [Header("Movement")]
         [SerializeField]
@@ -26,12 +17,6 @@ namespace Gum
         float currentAngle;
 
         float rotationVelocity;
-
-        int _movementTouchId = -1;
-
-        Vector2 _movementTouchStartPoint;
-
-        Vector2 _movementTouchCurrentPoint;
 
         Vector3 _normal = Vector3.up;
 
@@ -51,63 +36,9 @@ namespace Gum
 
         float _yVelocity;
 
-        bool _jumpPrepared;
-
         void Start()
         {
             controller = GetComponent<CharacterController>();
-        }
-
-        void OnEnable()
-        {
-            TouchAction.action.Enable();
-            TouchAction.action.performed += TouchPerformed;
-        }
-
-        void OnDisable()
-        {
-            TouchAction.action.performed -= TouchPerformed;
-        }
-
-        private void TouchPerformed(InputAction.CallbackContext obj)
-        {
-            var touch = obj.ReadValue<TouchState>();
-
-            if (touch.isTap)
-            {
-                // Прыжок тапом по плавой части экрана
-                _jumpPrepared = touch.isTap && touch.position.x > Screen.width / 2;
-            }
-
-            if (touch.phase == TouchPhase.Began)
-            {
-                var isMovementTouch = touch.position.x < Screen.width / 2;
-
-                if (isMovementTouch)
-                {
-                    _movementTouchId = touch.touchId;
-                    _movementTouchStartPoint = touch.position;
-                    _movementTouchCurrentPoint = touch.position;
-                }
-            }
-
-            if (touch.phase == TouchPhase.Moved)
-            {
-                if (touch.touchId == _movementTouchId)
-                {
-                    _movementTouchCurrentPoint = touch.position;
-                }
-            }
-
-            if (touch.phase == TouchPhase.Ended)
-            {
-                if (touch.touchId == _movementTouchId)
-                {
-                    _movementTouchId = -1;
-                    _movementTouchStartPoint = touch.position;
-                    _movementTouchCurrentPoint = touch.position;
-                }
-            }
         }
 
         void OnControllerColliderHit(ControllerColliderHit hit)
@@ -118,14 +49,21 @@ namespace Gum
         // Update is called once per frame
         void Update()
         {
+            var fell = HandleFall();
+
+            if (fell)
+            {
+                return;
+            }
+
             if (transform.position.y < 10f)
             {
                 transform.position = Vector3.zero;
             }
 
-            var jumpReplacement = HandleGravityAndJump();
+            var (move, jump) = InputManagerScriptableObject.Movement();
 
-            var move = _movementTouchCurrentPoint - _movementTouchStartPoint;
+            var jumpReplacement = HandleGravityAndJump(jump);
 
             if (move == Vector2.zero)
             {
@@ -157,7 +95,19 @@ namespace Gum
             controller.Move(speed * Time.deltaTime * _direction + jumpReplacement);
         }
 
-        Vector3 HandleGravityAndJump()
+        bool HandleFall()
+        {
+            if (transform.position.y < 0f)
+            {
+                transform.position = new Vector3(0, 32f, 0);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        Vector3 HandleGravityAndJump(bool jump)
         {
             if (controller.isGrounded && _yVelocity < 0f)
             {
@@ -172,7 +122,7 @@ namespace Gum
 
             var canJump = controller.isGrounded || Time.time - _lastGroundedTime < _coyoteTime;
 
-            if (_jumpPrepared && canJump)
+            if (jump && canJump)
             {
                 _yVelocity = Mathf.Sqrt(jumpHeight * 2f * -Physics.gravity.y);
 
@@ -181,7 +131,6 @@ namespace Gum
             }
 
             _yVelocity += Physics.gravity.y * gravityMultiplier * Time.deltaTime;
-            _jumpPrepared = false;
 
             return _yVelocity * Time.deltaTime * Vector3.up;
         }
