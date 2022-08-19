@@ -6,11 +6,9 @@ namespace Gum
     [CreateAssetMenu(fileName = "InputManager", menuName = "ScriptableObjects/InputManager")]
     public class InputManagerScriptableObject : ScriptableObject
     {
-        static double JumpTapTime = 1;
+        public const float JumpTapRadius = 10;
 
-        static float JumpTapRadius = 10;
-
-        static (double touchId, int frame) lastJump;
+        static (double startTime, int frame) lastJump;
 
         public static (Vector2 move, bool Jump) Movement()
         {
@@ -47,35 +45,35 @@ namespace Gum
                 return (move.normalized, jump);
             }
 
-            foreach (var touch in Touchscreen.current.touches)
+            var touches = Touchscreen.current.touches;
+
+            for (int i = 0; i < touches.Count && i < 2; i++)
             {
-                var state = touch.ReadValue();
-                var start = state.startPosition;
+                var state = touches[i].ReadValue();
+
+                var startPosition = state.startPosition;
                 var position = state.position;
                 var startTime = state.startTime;
                 var inProgress = state.isInProgress;
-                var touchId = state.startTime;
 
-                var isMovementTouch = start.x < Screen.width / 2;
+                var isMovementTouch = startPosition.x < Screen.width / 2;
                 var isJumpTouch = !isMovementTouch;
 
                 if (isMovementTouch && inProgress)
                 {
-                    move = position - start;
-                    continue;
+                    move = position - startPosition;
                 }
 
                 if (
                     isJumpTouch &&
                     !inProgress &&
-                    Time.realtimeSinceStartup - startTime < JumpTapTime &&
-                    !(lastJump.frame != Time.frameCount && lastJump.touchId == touchId)
+                    !(lastJump.frame != Time.frameCount && lastJump.startTime == startTime)
                 )
                 {
-                    lastJump.touchId = touchId;
+                    lastJump.startTime = startTime;
                     lastJump.frame = Time.frameCount;
 
-                    var delta = position - start;
+                    var delta = position - startPosition;
                     jump = delta.magnitude < JumpTapRadius;
                 }
             }
