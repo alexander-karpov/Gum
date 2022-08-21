@@ -35,7 +35,7 @@ namespace Gum
                 move.y -= 1;
             }
 
-            if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            if (Keyboard.current.spaceKey.wasReleasedThisFrame)
             {
                 jump = true;
             }
