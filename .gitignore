@@ -73,3 +73,8 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 /Demo_BurstDebugInformation_DoNotShip/
 .DS_Store
+WebGLBuild/index.html
+WebGLBuild/Build/WebGLBuild.data
+WebGLBuild/Build/WebGLBuild.framework.js
+WebGLBuild/Build/WebGLBuild.loader.js
+WebGLBuild/Build/WebGLBuild.wasm
